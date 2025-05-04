@@ -26,7 +26,7 @@ export class Platform {
         this.width = width;
         this.height = height;
     }
-    draw(camX, ctx) {
+    draw(ctx, camX) {
         ctx.fillStyle = 'red';
         ctx.fillRect(this.x - camX, this.y, this.width, this.height);
     }
@@ -51,7 +51,7 @@ export class ClientTrophy {
             pickupSound.play();
         }
     }
-    draw(camX, ctx) {
+    draw(ctx, camX) {
         if (this.collected) return;
         ctx.drawImage(
             this.assets.client,
@@ -124,7 +124,7 @@ export class Player {
         this.x += this.vx;
         this.x = Math.max(bounds.minX(camX), Math.min(this.x, bounds.maxX()));
     }
-    draw(camX, ctx) {
+    draw(ctx, camX) {
         const sprite = this.vx !== 0 ? this.assets.playerWalk : this.assets.playerStand;
         ctx.drawImage(
             sprite,
@@ -132,6 +132,135 @@ export class Player {
             this.y + DRAW_OFFSET_Y,
             PLAYER_SIZE.w,
             PLAYER_SIZE.h
+        );
+    }
+}
+
+/**
+ * Coffee power-up: boosts player speed for a duration when touched.
+ */
+export class Coffee {
+    constructor(x, y, assets, speedBoost = 12, duration = 3000) {
+        this.x = x;
+        this.y = y;
+        this.width = CLIENT_SIZE.w;
+        this.height = CLIENT_SIZE.h;
+        this.triggered = false;
+        this.assets = assets;
+        this.speedBoost = speedBoost;
+        this.duration = duration;
+    }
+
+    update(player) {
+        if (!this.triggered &&
+            player.x < this.x + this.width &&
+            player.x + PLAYER_SIZE.w > this.x &&
+            player.y < this.y + this.height &&
+            player.y + PLAYER_SIZE.h > this.y) {
+            this.triggered = true;
+            const originalSpeed = player.speed;
+            player.speed = this.speedBoost;
+            setTimeout(() => {
+                player.speed = originalSpeed;
+            }, this.duration);
+        }
+    }
+
+    draw(ctx, camX) {
+        if (this.triggered) return;
+        ctx.drawImage(
+            this.assets.coffeeMug,
+            this.x - camX,
+            this.y,
+            this.width,
+            this.height
+        );
+    }
+}
+
+/**
+ * MacError hazard: freezes player and displays message when touched.
+ */
+export class MacError {
+    constructor(x, y, assets, freezeTime = 3000) {
+        this.x = x;
+        this.y = y;
+        this.width = PLAYER_SIZE.w;
+        this.height = PLAYER_SIZE.h;
+        this.triggered = false;
+        this.assets = assets;
+        this.freezeTime = freezeTime;
+    }
+
+    update(player, worldState) {
+        if (!this.triggered &&
+            player.x < this.x + this.width &&
+            player.x + PLAYER_SIZE.w > this.x &&
+            player.y < this.y + this.height &&
+            player.y + PLAYER_SIZE.h > this.y) {
+            this.triggered = true;
+            worldState.freezeActive = true;
+            worldState.messageActive = true;
+            player.vx = player.vy = 0;
+            this.assets.warnSound.play().catch(() => { });
+            setTimeout(() => {
+                worldState.freezeActive = false;
+                worldState.messageActive = false;
+            }, this.freezeTime);
+        }
+    }
+
+    draw(ctx, camX) {
+        if (this.triggered) return;
+        ctx.drawImage(
+            this.assets.computerSpinning,
+            this.x - camX,
+            this.y,
+            this.width,
+            this.height
+        );
+    }
+}
+
+/**
+ * Zombie enemy: patrols between zone.minX and zone.maxX, resets game on contact.
+ */
+export class Zombie {
+    constructor(x, y, zone, assets, speed = 1.5) {
+        this.x = x;
+        this.y = y;
+        this.width = PLAYER_SIZE.w;
+        this.height = PLAYER_SIZE.h;
+        this.zone = zone;      // { minX, maxX }
+        this.dir = 1;
+        this.speed = speed;
+        this.assets = assets;
+    }
+
+    update(player) {
+        // patrol motion
+        this.x += this.speed * this.dir;
+        if (this.x < this.zone.minX || this.x > this.zone.maxX) {
+            this.dir *= -1;
+            this.x = Math.max(this.zone.minX, Math.min(this.x, this.zone.maxX));
+        }
+        // collision resets page
+        if (
+            player.x < this.x + this.width &&
+            player.x + PLAYER_SIZE.w > this.x &&
+            player.y < this.y + this.height &&
+            player.y + PLAYER_SIZE.h > this.y) {
+            window.location.reload();
+        }
+    }
+
+    draw(ctx, camX) {
+        ctx.drawImage(
+            this.assets.zombieClient,
+            this.x - camX,
+            this.y,
+            this.width,
+            this.height
         );
     }
 }

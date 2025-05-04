@@ -1,0 +1,49 @@
+/* styles.css */
+
+body {
+    margin: 0;
+    overflow: hidden;
+    background: #000;
+    font-family: 'Press Start 2P', sans-serif;
+  }
+  
+  canvas {
+    display: block;
+    margin: auto;
+  }
+  
+  #startScreen {
+    position: absolute;
+    inset: 0;
+    background: #000;
+    color: #0f0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 1;
+  }
+  
+  #startScreen h1 {
+    font-size: 24px;
+    margin-bottom: 30px;
+    text-align: center;
+  }
+  
+  #startButton {
+    padding: 12px 24px;
+    background: #0f0;
+    color: #000;
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  
+  #startButton:hover {
+    background: #8f8;
+  }
+  
+  #gameContainer {
+    display: none;
+  }
+  
