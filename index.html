@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Road to Now!</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; overflow: hidden; background: #000; font-family: 'Press Start 2P', sans-serif; }
+    canvas { display: block; margin: auto; }
+
+    #startScreen {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: #000;
+      color: #0f0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 1;
+    }
+
+    #startScreen h1 {
+      font-size: 24px;
+      margin-bottom: 30px;
+      text-align: center;
+    }
+
+    #startButton {
+      padding: 12px 24px;
+      background: #0f0;
+      color: #000;
+      border: none;
+      font-size: 16px;
+      cursor: pointer;
+      font-family: 'Press Start 2P', sans-serif;
+    }
+
+    #startButton:hover {
+      background: #8f8;
+    }
+  </style>
+</head>
+<body>
+
+<div id="startScreen">
+  <h1>ROAD TO DESCO21C</h1>
+  <button id="startButton">PLAY</button>
+</div>
+
+<canvas id="gameCanvas" width="800" height="400"></canvas>
+
+<!-- Link to external JS -->
+<script src="src/constants.js"></script>
+<script src="src/styles.js"></script>
+<script src="src/Entity.js"></script>
+<script src="src/game.js"></script>
+</body>
+</html>
