@@ -14,6 +14,10 @@ export const constants = {
         w: 30,
         h: 50
     },
+    PLAYER_SPEED: {
+        default: 6,
+        mobileDefault: 4
+    },
 
     SPRITE_PATHS: {
         playerStand: 'assets/bill_stand.png',

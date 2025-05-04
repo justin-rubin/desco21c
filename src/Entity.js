@@ -6,6 +6,7 @@ const {
     DRAW_OFFSET_Y,
     CLIENT_SIZE,
     PLAYER_SIZE,
+    PLAYER_SPEED
 } = constants;
 
 const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
@@ -69,15 +70,15 @@ export class Player {
         this.vx = 0;
         this.vy = 0;
         this.jumping = false;
-        this.speed = 6;
+        this.speed = isMobile ? PLAYER_SPEED.mobileDefault : PLAYER_SPEED.default;
         this.assets = assets;
     }
     handleInput() {
         // this.vx = keys.ArrowRight ? this.speed : keys.ArrowLeft ? -this.speed : 0;
-        const s = this.speed || 6;
+        const s = this.speed || PLAYER_SPEED.default;
         if (isMobile) {
             // always move right on mobile
-            this.vx = s;
+            this.vx = this.speed || PLAYER_SPEED.mobileDefault;
         } else {
             // normal desktop/keyboard
             this.vx = keys.ArrowRight ? s

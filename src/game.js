@@ -11,7 +11,8 @@ const {
     GROUND_LEVEL,
     CLIENT_SIZE,
     PLAYER_SIZE,
-    SPRITE_PATHS
+    SPRITE_PATHS,
+    PLAYER_SPEED
 } = constants;
 const {
     HUD_FONT,
@@ -49,6 +50,7 @@ const {
    Arcade Game (Refactored)
    ======================= */
 
+const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 // Canvas & Context
 const canvas = document.getElementById(CANVAS_ID);
 const ctx = canvas.getContext('2d');
@@ -169,7 +171,7 @@ function resetGame() {
     player.x = 50;
     player.y = GROUND_LEVEL - PLAYER_SIZE.h;
     player.vx = player.vy = 0;
-    player.speed = 6;
+    player.speed = isMobile ? PLAYER_SPEED.mobileDefault : PLAYER_SPEED.default;
     player.jumping = false;
     cameraX = 0;
     milestoneHit = freezeActive = messageActive = false;
@@ -185,7 +187,7 @@ function update() {
         // zero out any motion
         player.vx = 0;
         player.vy = 0;
-        player.speed = 6;
+        player.speed = isMobile ? PLAYER_SPEED.mobileDefault : PLAYER_SPEED.default;
         // skip all input/physics/camera updates
         return;
     }
@@ -199,7 +201,7 @@ function update() {
             cm.triggered = true;
             player.speed = SPEED_BOOST;  // Bill moves faster
             setTimeout(() => {
-                player.speed = 6;
+                player.speed = isMobile ? PLAYER_SPEED.mobileDefault : PLAYER_SPEED.default;
             }, 3000);
             break;
         }
