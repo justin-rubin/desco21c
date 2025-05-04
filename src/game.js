@@ -5,12 +5,14 @@ import {
     Player,
     ClientTrophy
 } from "./Entity.js";
+import { worldState, initEntities } from "./entities.js";
 
 const {
     CANVAS_ID,
     GROUND_LEVEL,
     CLIENT_SIZE,
     PLAYER_SIZE,
+    SPEED_BOOST,
     SPRITE_PATHS,
     PLAYER_SPEED
 } = constants;
@@ -23,11 +25,12 @@ const {
 } = styles;
 
 const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-// Canvas & Context
 const canvas = document.getElementById(CANVAS_ID);
 const ctx = canvas.getContext('2d');
-// Game Container for dynamic UI
 const gameContainer = document.getElementById('gameContainer');
+let gameRunning = false;
+let frameId;
+const assets = {};
 
 canvas.addEventListener('touchstart', e => {
     e.preventDefault();            // prevent scrolling
@@ -37,65 +40,58 @@ canvas.addEventListener('touchstart', e => {
     }
 }, { passive: false });
 
-// Control flags\ 
-let gameRunning = false;
-let frameId;
-
-// Asset Loader
-const assets = {};
-function loadAssets() {
-    const promises = [];
-    for (const [key, src] of Object.entries(SPRITE_PATHS)) {
-        const img = new Image();
-        img.src = src;
-        assets[key] = img;
-        promises.push(new Promise(res => img.onload = res));
-    }
-    return Promise.all(promises);
-}
-
-// Sound Effects
 const warnSound = new Audio('assets/Basso.mp3');
 
+// function loadAssets() {
+//     const promises = [];
+//     for (const [key, src] of Object.entries(SPRITE_PATHS)) {
+//         const img = new Image();
+//         img.src = src;
+//         assets[key] = img;
+//         promises.push(new Promise(res => img.onload = res));
+//     }
+//     return Promise.all(promises);
+// }
+
 // Game Setup
-const platforms = [
-    new Platform(0, GROUND_LEVEL + 50, 2000, 50),
-    new Platform(400, 270, 100, 10),
-    new Platform(600, 220, 80, 10),
-    new Platform(800, 180, 100, 10),
-    new Platform(1100, 300, 250, 10)
-];
-const clients = [
-    new ClientTrophy(300, GROUND_LEVEL - (CLIENT_SIZE.h / 2), assets),
-    new ClientTrophy(850, 184 - CLIENT_SIZE.h, assets),
-    new ClientTrophy(1300, 180 - CLIENT_SIZE.h, assets),
-    new ClientTrophy(1500, GROUND_LEVEL - (CLIENT_SIZE.h / 2), assets),
-    new ClientTrophy(1600, GROUND_LEVEL - (CLIENT_SIZE.h / 2), assets),
-    new ClientTrophy(1700, GROUND_LEVEL - (CLIENT_SIZE.h / 2), assets),
-    new ClientTrophy(1800, GROUND_LEVEL - (CLIENT_SIZE.h / 2), assets),
-    new ClientTrophy(1900, GROUND_LEVEL - (CLIENT_SIZE.h / 2), assets),
-    new ClientTrophy(2000, GROUND_LEVEL - (CLIENT_SIZE.h / 2), assets),
-    new ClientTrophy(2100, GROUND_LEVEL - (CLIENT_SIZE.h / 2), assets),
-];
+// const platforms = [
+//     new Platform(0, GROUND_LEVEL + 50, 2000, 50),
+//     new Platform(400, 270, 100, 10),
+//     new Platform(600, 220, 80, 10),
+//     new Platform(800, 180, 100, 10),
+//     new Platform(1100, 300, 250, 10)
+// ];
+// const clients = [
+//     new ClientTrophy(300, GROUND_LEVEL - (CLIENT_SIZE.h / 2), assets),
+//     new ClientTrophy(850, 184 - CLIENT_SIZE.h, assets),
+//     new ClientTrophy(1300, 180 - CLIENT_SIZE.h, assets),
+//     new ClientTrophy(1500, GROUND_LEVEL - (CLIENT_SIZE.h / 2), assets),
+//     new ClientTrophy(1600, GROUND_LEVEL - (CLIENT_SIZE.h / 2), assets),
+//     new ClientTrophy(1700, GROUND_LEVEL - (CLIENT_SIZE.h / 2), assets),
+//     new ClientTrophy(1800, GROUND_LEVEL - (CLIENT_SIZE.h / 2), assets),
+//     new ClientTrophy(1900, GROUND_LEVEL - (CLIENT_SIZE.h / 2), assets),
+//     new ClientTrophy(2000, GROUND_LEVEL - (CLIENT_SIZE.h / 2), assets),
+//     new ClientTrophy(2100, GROUND_LEVEL - (CLIENT_SIZE.h / 2), assets),
+// ];
 
-// --- Mac Error hazard setup ---
-const macErrors = [
-    // position it where you like in level-coords:
-    { x: 700, y: GROUND_LEVEL - (PLAYER_SIZE.h / 2), width: PLAYER_SIZE.w, height: PLAYER_SIZE.h, triggered: false },
-    { x: 1000, y: GROUND_LEVEL - (PLAYER_SIZE.h / 2), width: PLAYER_SIZE.w, height: PLAYER_SIZE.h, triggered: false }
-];
+// // --- Mac Error hazard setup ---
+// const macErrors = [
+//     // position it where you like in level-coords:
+//     { x: 700, y: GROUND_LEVEL - (PLAYER_SIZE.h / 2), width: PLAYER_SIZE.w, height: PLAYER_SIZE.h, triggered: false },
+//     { x: 1000, y: GROUND_LEVEL - (PLAYER_SIZE.h / 2), width: PLAYER_SIZE.w, height: PLAYER_SIZE.h, triggered: false }
+// ];
 
-// 3×2 tiles are 32×32, so we’ll reuse CLIENT_SIZE for mug dimensions:
-const SPEED_BOOST = 12;    // new max speed after drinking
-const coffeeMugs = [
-    {
-        x: 1200,
-        y: GROUND_LEVEL - CLIENT_SIZE.h,
-        width: CLIENT_SIZE.w,
-        height: CLIENT_SIZE.h,
-        triggered: false
-    }
-];
+// // 3×2 tiles are 32×32, so we’ll reuse CLIENT_SIZE for mug dimensions:
+// const SPEED_BOOST = 12;    // new max speed after drinking
+// const coffeeMugs = [
+//     {
+//         x: 1200,
+//         y: GROUND_LEVEL - CLIENT_SIZE.h,
+//         width: CLIENT_SIZE.w,
+//         height: CLIENT_SIZE.h,
+//         triggered: false
+//     }
+// ];
 
 let freezeActive = false;
 let messageActive = false;
@@ -104,7 +100,7 @@ const player = new Player(assets);
 let cameraX = 0;
 let backgroundW = 0;
 let milestoneHit = false;
-const levelEndX = platforms[0].width - PLAYER_SIZE.w + 480;
+// const levelEndX = platforms[0].width - PLAYER_SIZE.w + 480;
 
 // Bounds Helper
 const bounds = {
@@ -134,6 +130,9 @@ function createReplayButton() {
 
 // Reset game state\ n
 function resetGame() {
+    const { entities } = worldState;
+    const { player, clients, coffeeMugs, macErrors, platforms } = entities;
+
     // hide replay & show start
     gameRunning = false;
     if (frameId) cancelAnimationFrame(frameId);
@@ -154,7 +153,10 @@ function resetGame() {
 }
 
 // Update & Draw
-function update() {
+function update(worldState) {
+    const { entities, levelEndX } = worldState;
+    const { player, clients, coffeeMugs, macErrors, platforms } = entities;
+
     if (milestoneHit) {
         // zero out any motion
         player.vx = 0;
@@ -231,7 +233,10 @@ function update() {
     }
 }
 
-function draw() {
+function draw(worldState) {
+    const { assets, canvas, ctx, entities } = worldState;
+    const { player, clients, coffeeMugs, macErrors, platforms } = entities;
+
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     // background
@@ -306,21 +311,82 @@ function draw() {
 // Main Loop
 function gameLoop() {
     if (!gameRunning) return;
-    update();
-    draw();
+    update(worldState);
+    draw(worldState);
     // requestAnimationFrame(gameLoop);
     frameId = requestAnimationFrame(gameLoop);
 }
 
 // Start Game
-loadAssets().then(() => {
-    backgroundW = assets.background.width;
-    createReplayButton();
-    document.getElementById('startButton').onclick = () => {
-        document.getElementById('startScreen').style.display = 'none';
-        //resetGame();
-        gameRunning = true;
-        gameLoop();
-        frameId = requestAnimationFrame(gameLoop);
-    };
-});
+// loadAssets().then(() => {
+// backgroundW = assets.background.width;
+// createReplayButton();
+// document.getElementById('startButton').onclick = () => {
+//     document.getElementById('startScreen').style.display = 'none';
+//     //resetGame();
+//     gameRunning = true;
+//     gameLoop();
+//     frameId = requestAnimationFrame(gameLoop);
+// };
+// });
+
+function loadAssets(SPRITE_PATHS, gameContainer, onReplay) {
+    const assets = {};
+    const promises = [];
+
+    for (const [key, src] of Object.entries(SPRITE_PATHS)) {
+        const img = new Image();
+        img.src = src;
+        assets[key] = img;
+        promises.push(
+            new Promise((res, rej) => {
+                img.onload = () => res(key);
+                img.onerror = () => rej(new Error(`Failed to load ${src}`));
+            })
+        );
+    }
+
+    return Promise
+        .all(promises)
+        .then(() => {
+            // All images are ready — now wire up the replay button
+            createReplayButton(
+                gameContainer,
+                onReplay
+            );
+            return assets;
+        });
+}
+
+loadAssets(constants.SPRITE_PATHS, gameContainer, () => {
+    // This is your “Replay” handler:
+    worldState.gameRunning = false;
+
+    // worldState.resetEntities();
+    document.getElementById('startScreen').style.display = '';
+    gameContainer.style.display = 'none';
+})
+    .then(assets => {
+        worldState.assets = assets;
+        worldState.canvas = canvas;
+        worldState.ctx = ctx;
+        initEntities(worldState);
+
+        backgroundW = assets.background.width;
+        createReplayButton();
+        document.getElementById('startButton').onclick = () => {
+            document.getElementById('startScreen').style.display = 'none';
+            //resetGame();
+            gameRunning = true;
+            gameLoop();
+            frameId = requestAnimationFrame(gameLoop);
+        };
+        // startButton.addEventListener('click', () => {
+        //     document.getElementById('startScreen').style.display = 'none';
+        //     gameContainer.style.display = 'block';
+        //     worldState.resetEntities();
+        //     worldState.gameRunning = true;
+        //     requestAnimationFrame(loop);
+        // });
+    })
+    .catch(err => console.error('Asset loading failed:', err));
