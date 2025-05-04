@@ -22,34 +22,6 @@ const {
     SUBTITLE_FONT
 } = styles;
 
-// const {
-//     CANVAS_ID,
-//     GRAVITY,
-//     GROUND_LEVEL,
-//     DRAW_OFFSET_Y,
-//     CLIENT_SIZE,
-//     PLAYER_SIZE,
-//     SPRITE_PATHS
-// } = window.GameConstants; //require('./constants.js');
-
-// const {
-//     HUD_FONT,
-//     HUD_COLOR,
-//     TITLE_FONT,
-//     TITLE_COLOR,
-//     SUBTITLE_FONT
-// } = window.GameStyles; //require('./styles.js');
-
-// const {
-//     ClientTrophy,
-//     Player,
-//     Platform
-// } = window.EntityClass;
-
-/* =======================
-   Arcade Game (Refactored)
-   ======================= */
-
 const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 // Canvas & Context
 const canvas = document.getElementById(CANVAS_ID);
@@ -109,8 +81,8 @@ const clients = [
 // --- Mac Error hazard setup ---
 const macErrors = [
     // position it where you like in level-coords:
-    { x: 700, y: GROUND_LEVEL - PLAYER_SIZE.h, width: PLAYER_SIZE.w, height: PLAYER_SIZE.h, triggered: false },
-    { x: 1000, y: GROUND_LEVEL - PLAYER_SIZE.h, width: PLAYER_SIZE.w, height: PLAYER_SIZE.h, triggered: false }
+    { x: 700, y: GROUND_LEVEL - (PLAYER_SIZE.h / 2), width: PLAYER_SIZE.w, height: PLAYER_SIZE.h, triggered: false },
+    { x: 1000, y: GROUND_LEVEL - (PLAYER_SIZE.h / 2), width: PLAYER_SIZE.w, height: PLAYER_SIZE.h, triggered: false }
 ];
 
 // 3×2 tiles are 32×32, so we’ll reuse CLIENT_SIZE for mug dimensions:

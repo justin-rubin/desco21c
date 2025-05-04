@@ -16,7 +16,7 @@ export const constants = {
     },
     PLAYER_SPEED: {
         default: 6,
-        mobileDefault: 4
+        mobileDefault: 3
     },
 
     SPRITE_PATHS: {
