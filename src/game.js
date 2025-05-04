@@ -1,3 +1,26 @@
+import { constants } from "./constants.js";
+import { styles } from "./styles.js";
+import {
+    Platform,
+    Player,
+    ClientTrophy
+} from "./Entity.js";
+
+const {
+    CANVAS_ID,
+    GROUND_LEVEL,
+    CLIENT_SIZE,
+    PLAYER_SIZE,
+    SPRITE_PATHS
+} = constants;
+const {
+    HUD_FONT,
+    HUD_COLOR,
+    TITLE_FONT,
+    TITLE_COLOR,
+    SUBTITLE_FONT
+} = styles;
+
 // const {
 //     CANVAS_ID,
 //     GRAVITY,
@@ -8,13 +31,13 @@
 //     SPRITE_PATHS
 // } = window.GameConstants; //require('./constants.js');
 
-const {
-    HUD_FONT,
-    HUD_COLOR,
-    TITLE_FONT,
-    TITLE_COLOR,
-    SUBTITLE_FONT
-} = window.GameStyles; //require('./styles.js');
+// const {
+//     HUD_FONT,
+//     HUD_COLOR,
+//     TITLE_FONT,
+//     TITLE_COLOR,
+//     SUBTITLE_FONT
+// } = window.GameStyles; //require('./styles.js');
 
 // const {
 //     ClientTrophy,
@@ -29,6 +52,20 @@ const {
 // Canvas & Context
 const canvas = document.getElementById(CANVAS_ID);
 const ctx = canvas.getContext('2d');
+// Game Container for dynamic UI
+const gameContainer = document.getElementById('gameContainer');
+
+canvas.addEventListener('touchstart', e => {
+    e.preventDefault();            // prevent scrolling
+    if (!player.jumping) {
+        player.vy = -10;
+        player.jumping = true;
+    }
+}, { passive: false });
+
+// Control flags\ 
+let gameRunning = false;
+let frameId;
 
 // Asset Loader
 const assets = {};
@@ -44,7 +81,6 @@ function loadAssets() {
 }
 
 // Sound Effects
-const pickupSound = new Audio('assets/mario-coin.mp3');
 const warnSound = new Audio('assets/Basso.mp3');
 
 // Game Setup
@@ -102,12 +138,54 @@ const bounds = {
     minX: (camX) => Math.max(0, camX - 200)
 };
 
+// Create Replay button dynamically
+let replayButton;
+function createReplayButton() {
+    replayButton = document.createElement('button');
+    replayButton.textContent = 'Replay';
+    Object.assign(replayButton.style, {
+        position: 'absolute',
+        top: '67%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        padding: '12px 24px',
+        fontSize: '18px',
+        background: '#8f8',
+        display: 'none',
+        zIndex: 20
+    });
+    gameContainer.appendChild(replayButton);
+    replayButton.addEventListener('click', resetGame);
+}
+
+// Reset game state\ n
+function resetGame() {
+    // hide replay & show start
+    gameRunning = false;
+    if (frameId) cancelAnimationFrame(frameId);
+    replayButton.style.display = 'none';
+    document.getElementById('startScreen').style.display = '';
+    // reset entities
+    player.x = 50;
+    player.y = GROUND_LEVEL - PLAYER_SIZE.h;
+    player.vx = player.vy = 0;
+    player.speed = 6;
+    player.jumping = false;
+    cameraX = 0;
+    milestoneHit = freezeActive = messageActive = false;
+    clients.forEach(c => c.collected = false);
+    coffeeMugs.forEach(cm => cm.triggered = false);
+    macErrors.forEach(m => m.triggered = false);
+    // zombies.forEach(z => { z.x = z.zone.minX; z.dir = 1; });
+}
+
 // Update & Draw
 function update() {
     if (milestoneHit) {
         // zero out any motion
         player.vx = 0;
         player.vy = 0;
+        player.speed = 6;
         // skip all input/physics/camera updates
         return;
     }
@@ -119,7 +197,7 @@ function update() {
             player.y < cm.y + cm.height &&
             player.y + PLAYER_SIZE.h > cm.y) {
             cm.triggered = true;
-            player.speed = SPEED_BOOST;  // Bill moves faster from now on
+            player.speed = SPEED_BOOST;  // Bill moves faster
             setTimeout(() => {
                 player.speed = 6;
             }, 3000);
@@ -172,6 +250,10 @@ function update() {
     // ——— 4) Level-end check ———
     if (!milestoneHit && player.x >= levelEndX) {
         milestoneHit = true;
+        // show replay button
+        if (replayButton) {
+            replayButton.style.display = 'block';
+        }
     }
 }
 
@@ -184,13 +266,13 @@ function draw() {
     ctx.drawImage(assets.background, bgX + backgroundW, 0, backgroundW, canvas.height);
 
     // platforms
-    platforms.forEach(p => p.draw(cameraX));
+    platforms.forEach(p => p.draw(cameraX, ctx));
 
     // player
-    player.draw(cameraX);
+    player.draw(cameraX, ctx);
 
     // clients
-    clients.forEach(c => c.draw(cameraX));
+    clients.forEach(c => c.draw(cameraX, ctx));
 
     // draw the computer spinning sprite only if not yet hit
     macErrors.forEach(m => {
@@ -249,16 +331,22 @@ function draw() {
 
 // Main Loop
 function gameLoop() {
+    if (!gameRunning) return;
     update();
     draw();
-    requestAnimationFrame(gameLoop);
+    // requestAnimationFrame(gameLoop);
+    frameId = requestAnimationFrame(gameLoop);
 }
 
 // Start Game
 loadAssets().then(() => {
     backgroundW = assets.background.width;
+    createReplayButton();
     document.getElementById('startButton').onclick = () => {
         document.getElementById('startScreen').style.display = 'none';
+        //resetGame();
+        gameRunning = true;
         gameLoop();
+        frameId = requestAnimationFrame(gameLoop);
     };
 });

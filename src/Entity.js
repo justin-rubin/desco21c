@@ -1,12 +1,16 @@
+import { constants } from "./constants.js";
+
 const {
-    CANVAS_ID,
     GRAVITY,
     GROUND_LEVEL,
     DRAW_OFFSET_Y,
     CLIENT_SIZE,
     PLAYER_SIZE,
-    SPRITE_PATHS
-} = window.GameConstants; //require('./constants.js');
+} = constants;
+
+const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+// Sound Effects
+const pickupSound = new Audio('assets/mario-coin.mp3');
 
 // Input State
 const keys = {};
@@ -14,20 +18,20 @@ window.addEventListener('keydown', e => keys[e.code] = true);
 window.addEventListener('keyup', e => keys[e.code] = false);
 
 // Entity Classes
-class Platform {
+export class Platform {
     constructor(x, y, width, height) {
         this.x = x;
         this.y = y;
         this.width = width;
         this.height = height;
     }
-    draw(camX) {
+    draw(camX, ctx) {
         ctx.fillStyle = 'red';
         ctx.fillRect(this.x - camX, this.y, this.width, this.height);
     }
 }
 
-class ClientTrophy {
+export class ClientTrophy {
     constructor(x, y, assets) {
         this.x = x;
         this.y = y;
@@ -46,7 +50,7 @@ class ClientTrophy {
             pickupSound.play();
         }
     }
-    draw(camX) {
+    draw(camX, ctx) {
         if (this.collected) return;
         ctx.drawImage(
             this.assets.client,
@@ -58,7 +62,7 @@ class ClientTrophy {
     }
 }
 
-class Player {
+export class Player {
     constructor(assets) {
         this.x = 50;
         this.y = GROUND_LEVEL - PLAYER_SIZE.h;
@@ -69,7 +73,17 @@ class Player {
         this.assets = assets;
     }
     handleInput() {
-        this.vx = keys.ArrowRight ? this.speed : keys.ArrowLeft ? -this.speed : 0;
+        // this.vx = keys.ArrowRight ? this.speed : keys.ArrowLeft ? -this.speed : 0;
+        const s = this.speed || 6;
+        if (isMobile) {
+            // always move right on mobile
+            this.vx = s;
+        } else {
+            // normal desktop/keyboard
+            this.vx = keys.ArrowRight ? s
+                : keys.ArrowLeft ? -s
+                    : 0;
+        }
         if (keys.Space && !this.jumping) {
             this.vy = -10;
             this.jumping = true;
@@ -109,7 +123,7 @@ class Player {
         this.x += this.vx;
         this.x = Math.max(bounds.minX(camX), Math.min(this.x, bounds.maxX()));
     }
-    draw(camX) {
+    draw(camX, ctx) {
         const sprite = this.vx !== 0 ? this.assets.playerWalk : this.assets.playerStand;
         ctx.drawImage(
             sprite,
@@ -120,9 +134,3 @@ class Player {
         );
     }
 }
-
-window.EntityClass = {
-    ClientTrophy,
-    Player,
-    Platform
-};

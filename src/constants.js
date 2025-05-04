@@ -1,7 +1,5 @@
 // constants.js
-
-// CommonJS exports for use with require()/module.exports
-window.GameConstants = {
+export const constants = {
     CANVAS_ID: 'gameCanvas',
     GRAVITY: 0.5,
     GROUND_LEVEL: 350,

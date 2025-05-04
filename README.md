@@ -1,16 +1,52 @@
 # desco21c
-SN side scroller arcade game
 
+A ServiceNow-themed side-scroller arcade game. Play as **Bill** and collect clients while dodging chaos in the corporate streetscape!
 
-### Future
+---
 
- mini game, flow designer themed, collect the workflow actions and logics to build the workflow
+## 🎯 Goal
 
- - Blue screen of death
- when picked up, Bill freezed for 10 seconds, alert message "Glide Error 404"
+**Stage 1:** Collect as many clients as possible while avoiding hazards and using power-ups to your advantage.
 
- - Coffee cup
- when picke up Bill goes twice as fast for 10 seconds
+---
 
- - Red Client
- when picked up Bill looses a client
+## 🎮 Game Objects
+
+### ✅ Collectibles
+- **Client** – Adds to your score. Catch as many as you can!
+
+### ⚠️ Hazards
+- **Computer (Blue Screen of Death)** – Freezes Bill for a few seconds.
+- **Red Client** – Causes Bill to lose a collected client.
+
+### ⚡ Power-Ups
+- **Coffee** – Temporarily doubles Bill’s speed.
+
+---
+
+## 🚀 Play Online
+
+👉 [Play Now on GitHub Pages](https://justin-rubin.github.io/desco21c/)
+
+---
+
+## 💻 Run Locally
+
+Make sure you have Node.js installed, then:
+
+```bash
+npx serve .
+```
+
+Visit `http://localhost:3000` in your browser.
+
+---
+
+## 🔮 Future Ideas
+
+- **Mini-Game: Flow Designer Edition**  
+  Help Bill build workflows by collecting Flow Designer actions, triggers, and logic blocks scattered across the level.
+
+---
+
+Pull requests, pixel art, or bug fixes welcome!
